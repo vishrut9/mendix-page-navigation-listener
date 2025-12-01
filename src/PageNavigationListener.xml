@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="mendix.pagenavigationlistener.PageNavigationListener" pluginWidget="true" needsEntityContext="false" offlineCapable="true"
+        supportedPlatform="Web"
+        xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Page Navigation Listener</name>
+    <description>Fires a Mendix action whenever a new page is rendered in the Mendix client (SPA) or when browser navigation occurs.</description>
+    <icon/>
+    <properties>
+        <propertyGroup caption="Events">
+            <property key="onNavigate" type="action" required="false">
+                <caption>On navigate</caption>
+                <description>Action to execute when page navigation occurs</description>
+            </property>
+        </propertyGroup>
+    </properties>
+</widget>
