@@ -44,6 +44,40 @@ export function PageNavigationListener({ onNavigate }: PageNavigationListenerCon
             });
         }
 
+        // RETRY LOGIC COMMENTED OUT - Use if widget doesn't work in cloud deployment
+        /*
+        const setupObserver = (retryCount = 0): void => {
+            const placeholder = document.querySelector(".mx-placeholder");
+
+            if (placeholder) {
+                // Found the placeholder, set up observer
+                observerRef.current = new MutationObserver(() => {
+                    executeAction();
+                });
+
+                observerRef.current.observe(placeholder, {
+                    childList: true,
+                    subtree: false
+                });
+
+                console.log("[PageNavigationListener] Observer successfully attached to .mx-placeholder");
+            } else {
+                // Placeholder not found yet, retry up to 10 times (5 seconds total)
+                if (retryCount < 10) {
+                    console.log(
+                        `[PageNavigationListener] .mx-placeholder not found, retrying... (${retryCount + 1}/10)`
+                    );
+                    setTimeout(() => setupObserver(retryCount + 1), 500);
+                } else {
+                    console.error("[PageNavigationListener] Failed to find .mx-placeholder after 10 attempts");
+                }
+            }
+        };
+
+        // Start observer setup with retry logic
+        setupObserver();
+        */
+
         // Cleanup function
         return () => {
             // Disconnect MutationObserver if active
