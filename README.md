@@ -6,10 +6,13 @@ A Mendix pluggable widget that detects page navigation and triggers configured a
 
 - ✅ **Automatic Navigation Detection** - Detects when users navigate between pages in Mendix apps
 - ✅ **Works with Mendix 10.x** - Tested and optimized for modern Mendix versions
+- ✅ **Cloud Deployment Ready** - Tested and working in Mendix Cloud environments
+- ✅ **Intelligent Page Tracking** - Prevents duplicate executions on the same page
 - ✅ **Configurable Actions** - Trigger any nanoflow or microflow on navigation
 - ✅ **Infinite Loop Protection** - Built-in safeguards prevent endless execution cycles
 - ✅ **Zero UI Footprint** - Completely invisible widget that works in the background
 - ✅ **DOM-based Detection** - Reliable page change detection via MutationObserver
+- ✅ **No Duplicate Logging** - Each page navigation triggers action exactly once
 
 ## How It Works
 
@@ -59,9 +62,37 @@ The widget uses a **MutationObserver** to watch for changes in the DOM:
 const placeholder = document.querySelector(".mx-placeholder");
 observerRef.current.observe(placeholder, {
     childList: true,   // Detect when children are added/removed
-    subtree: false     // Only watch direct children (not nested changes)
+    subtree: true      // Watch nested changes to catch all page loads
 });
 ```
+
+### Page Tracking (Prevents Duplicates)
+
+The widget intelligently tracks the current page to prevent duplicate executions:
+
+```typescript
+// Extract stable page identifier from DOM
+const getCurrentPageId = (): string | null => {
+    const pageElement = placeholder.querySelector('[class*="mx-name-"]');
+    if (pageElement) {
+        const match = pageElement.className.match(/mx-name-\w+/);
+        return match ? match[0] : null;  // e.g., "mx-name-pageHome1"
+    }
+    return null;
+};
+
+// Only execute if page actually changed
+if (currentPage === currentPageRef.current) {
+    return; // Skip - still on same page
+}
+currentPageRef.current = currentPage;  // Update tracked page
+onNavigate.execute();  // Execute action for new page
+```
+
+This prevents multiple executions that can occur in cloud deployments due to:
+- Progressive rendering and chunked asset loading
+- Loading states and skeleton screens
+- DOM reordering during page transitions
 
 ### Infinite Loop Prevention
 
@@ -99,6 +130,16 @@ This prevents:
 - Stale action references
 
 ## Version History
+
+### Version 2.1.0 (Current)
+- **Intelligent page tracking** - Prevents duplicate executions on same page
+- **Cloud deployment ready** - Tested and working in Mendix Cloud environments
+- **Stable page identification** - Uses mx-name-* class extraction with regex
+- **Handles progressive rendering** - Works with cloud CDN and chunked loading
+- **Subtree observation** - Changed to subtree: true for better page detection
+- **Console logging** - Added debugging output for page transitions
+- **Fixes duplicate logging** - Resolves multiple executions per navigation in cloud
+- **Production tested** - Verified working in both local and cloud deployments
 
 ### Version 2.0.0
 - Clean, optimized implementation for Mendix 10.x
@@ -195,9 +236,13 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 **Solution**: Make sure the widget is placed in a **layout**, not just a page. Layouts are persistent across page navigation.
 
-### Action executing multiple times
+### Action executing multiple times (Fixed in v2.1.0)
 
-**Solution**: This should be prevented by the built-in guard. If you still experience this, ensure only one instance of the widget exists in your app.
+**Solution**: Version 2.1.0+ includes intelligent page tracking that prevents duplicate executions. If you still experience this:
+1. Ensure you're using version 2.1.0 or later
+2. Check browser console for `[PageNavigationListener]` messages
+3. Verify only one instance of the widget exists in your app
+4. For cloud deployments, the page tracking feature automatically handles progressive rendering
 
 ### Widget not found in Studio Pro
 
