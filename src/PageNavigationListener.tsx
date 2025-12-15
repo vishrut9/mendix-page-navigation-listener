@@ -14,24 +14,11 @@ export function PageNavigationListener({ onNavigate }: PageNavigationListenerCon
                 return null;
             }
 
-            // Method 1: Look for element with mx-name-* class (most reliable)
+            // Look for element with mx-name-* class
             const pageElement = placeholder.querySelector('[class*="mx-name-"]');
             if (pageElement) {
                 // Extract just the mx-name-pageXXX part
                 const match = pageElement.className.match(/mx-name-\w+/);
-                return match ? match[0] : null;
-            }
-
-            // Method 2: Look for data-mendix-page attribute (if available)
-            const pageWithDataAttr = placeholder.querySelector("[data-mendix-page]");
-            if (pageWithDataAttr) {
-                return pageWithDataAttr.getAttribute("data-mendix-page");
-            }
-
-            // Method 3: Fallback - use page container's class pattern
-            const pageContainer = placeholder.querySelector(".mx-scrollcontainer-wrapper, .page-content");
-            if (pageContainer && pageContainer.firstElementChild) {
-                const match = pageContainer.firstElementChild.className.match(/mx-name-\w+/);
                 return match ? match[0] : null;
             }
 
