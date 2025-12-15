@@ -4,14 +4,69 @@ import { PageNavigationListenerContainerProps } from "../typings/PageNavigationL
 export function PageNavigationListener({ onNavigate }: PageNavigationListenerContainerProps): ReactElement | null {
     const observerRef = useRef<MutationObserver | null>(null);
     const isExecutingRef = useRef<boolean>(false);
+    const currentPageRef = useRef<string | null>(null);
 
     useEffect(() => {
+        // Get a stable page identifier
+        const getCurrentPageId = (): string | null => {
+            const placeholder = document.querySelector(".mx-placeholder");
+            if (!placeholder) {
+                return null;
+            }
+
+            // Method 1: Look for element with mx-name-* class (most reliable)
+            const pageElement = placeholder.querySelector('[class*="mx-name-"]');
+            if (pageElement) {
+                // Extract just the mx-name-pageXXX part
+                const match = pageElement.className.match(/mx-name-\w+/);
+                return match ? match[0] : null;
+            }
+
+            // Method 2: Look for data-mendix-page attribute (if available)
+            const pageWithDataAttr = placeholder.querySelector("[data-mendix-page]");
+            if (pageWithDataAttr) {
+                return pageWithDataAttr.getAttribute("data-mendix-page");
+            }
+
+            // Method 3: Fallback - use page container's class pattern
+            const pageContainer = placeholder.querySelector(".mx-scrollcontainer-wrapper, .page-content");
+            if (pageContainer && pageContainer.firstElementChild) {
+                const match = pageContainer.firstElementChild.className.match(/mx-name-\w+/);
+                return match ? match[0] : null;
+            }
+
+            return null;
+        };
+
         // Execute action immediately when page changes
         const executeAction = (): void => {
             // Prevent execution if already executing to avoid infinite loops
             if (isExecutingRef.current) {
                 return;
             }
+
+            // Get current page identifier
+            const currentPage = getCurrentPageId();
+
+            // Only execute if we have a valid page and it's different from last page
+            if (!currentPage) {
+                console.log("[PageNavigationListener] No page identifier found yet, skipping");
+                return;
+            }
+
+            if (currentPage === currentPageRef.current) {
+                console.log("[PageNavigationListener] Same page detected:", currentPage, "- skipping execution");
+                return;
+            }
+
+            console.log(
+                "[PageNavigationListener] New page detected:",
+                currentPage,
+                "(previous:",
+                currentPageRef.current,
+                ")"
+            );
+            currentPageRef.current = currentPage;
 
             if (onNavigate && onNavigate.canExecute) {
                 isExecutingRef.current = true;
@@ -40,7 +95,7 @@ export function PageNavigationListener({ onNavigate }: PageNavigationListenerCon
         if (placeholder) {
             observerRef.current.observe(placeholder, {
                 childList: true,
-                subtree: false
+                subtree: true
             });
         }
 

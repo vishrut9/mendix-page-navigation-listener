@@ -1,7 +1,7 @@
 {
   "name": "pagenavigationlistener",
   "widgetName": "PageNavigationListener",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Fires a Mendix action whenever a new page is rendered in the Mendix client (SPA) or when browser navigation occurs.",
   "copyright": "Mendix Technology, 2025. All rights reserved.",
   "author": "Vish",
