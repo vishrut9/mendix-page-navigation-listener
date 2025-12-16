@@ -76,7 +76,7 @@ const getCurrentPageId = (): string | null => {
     const pageElement = placeholder.querySelector('[class*="mx-name-"]');
     if (pageElement) {
         const match = pageElement.className.match(/mx-name-\w+/);
-        return match ? match[0] : null;  // e.g., "mx-name-pageHome1"
+        return match ? match[0] : null;  // e.g., "mx-name-layoutGrid1"
     }
     return null;
 };
