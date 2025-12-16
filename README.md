@@ -257,21 +257,43 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## Design Rationale
 
-### Architecture
+### Why DOM-based Page Detection is Used
 
-The widget employs a **DOM observation strategy** to detect page navigation in Mendix applications. This approach was chosen because:
+Mendix applications built with the React client are single-page applications (SPAs). In this model:
 
-1. **No Native API**: Mendix does not expose a client-side navigation event API
-2. **Layout Persistence**: Widget placement in layouts ensures continuous observation across page transitions
-3. **Heuristic Identification**: Uses first widget's unique identifier (`mx-name-*`) as a proxy for page identity, leveraging Mendix's globally unique widget ID convention
+- Page navigation does not trigger a full browser reload
+- The browser URL often remains unchanged (unless Page URLs are enabled)
+- Layouts may persist across page navigations
+- React widgets placed in layouts do not remount on page changes
 
-### Detection Method
+At the same time, Mendix currently does not expose:
 
-```
-MutationObserver → .mx-placeholder changes → Extract mx-name-* → Compare with previous → Execute action
-```
+- A page lifecycle API
+- A page navigation event
 
-The widget observes Mendix's `.mx-placeholder` element (the dynamic page content container) and extracts the first widget's unique ID. Since Mendix assigns globally unique IDs to all widgets, different pages contain different widget IDs, enabling reliable navigation detection.
+Because of these constraints, a widget cannot reliably detect page navigation through:
+
+- URL changes
+- React lifecycle alone
+- Mendix Client APIs
+
+### Chosen Approach
+
+This widget detects page navigation by:
+
+1. **Observing** the layout's `.mx-placeholder`, which is the container where Mendix renders page content
+2. **Inferring** the active page from the first widget instance rendered inside that placeholder
+3. **Using** the widget's `mx-name-*` class as a stable page identifier
+4. **Executing** the configured Mendix action only when that identifier changes
+
+This approach aligns with how Mendix actually renders pages at runtime and has been validated against:
+
+- Local development runtime
+- Mendix Cloud deployments
+- Atlas-based layouts
+- Multiple page and layout combinations
+
+While this technique relies on DOM observation, it provides the best available signal for page navigation in Mendix SPAs where Page URLs are disabled.
 
 ## Known Limitations
 
