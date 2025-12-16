@@ -255,6 +255,69 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 **Solution**: The widget automatically cleans up its MutationObserver when unmounted, preventing memory leaks. This is handled by React's cleanup function in the useEffect hook.
 
+## Design Rationale
+
+### Architecture
+
+The widget employs a **DOM observation strategy** to detect page navigation in Mendix applications. This approach was chosen because:
+
+1. **No Native API**: Mendix does not expose a client-side navigation event API
+2. **Layout Persistence**: Widget placement in layouts ensures continuous observation across page transitions
+3. **Heuristic Identification**: Uses first widget's unique identifier (`mx-name-*`) as a proxy for page identity, leveraging Mendix's globally unique widget ID convention
+
+### Detection Method
+
+```
+MutationObserver → .mx-placeholder changes → Extract mx-name-* → Compare with previous → Execute action
+```
+
+The widget observes Mendix's `.mx-placeholder` element (the dynamic page content container) and extracts the first widget's unique ID. Since Mendix assigns globally unique IDs to all widgets, different pages contain different widget IDs, enabling reliable navigation detection.
+
+## Known Limitations
+
+### 1. Dependency on Mendix Internals
+**Impact**: Widget relies on Mendix DOM structure (`.mx-placeholder`) and naming conventions (`mx-name-*` pattern)  
+**Risk**: Breaking changes in future Mendix versions could require widget updates  
+**Likelihood**: Low (conventions stable for 10+ years)
+
+### 2. Heuristic vs. Semantic Detection
+**Nature**: Widget detects navigation through DOM changes and widget IDs, not semantic "page" concepts  
+**Implication**: Relies on Mendix rendering behavior; unusual page structures may behave unexpectedly  
+**Trade-off**: Accepted due to absence of native navigation API
+
+### 3. Conditional Visibility Edge Cases
+**Scenario**: Pages with conditional visibility on first widget may appear as different "pages" to different users  
+**Example**: Admin sees `mx-name-adminGrid`, User sees `mx-name-userGrid` on same page  
+**Impact**: Potential discrepancies in navigation tracking
+
+### 4. Layout Requirement
+**Critical**: Widget must be placed in a layout, not on individual pages  
+**Reason**: Page-level placement causes widget destruction on navigation  
+**Result**: Complete detection failure if incorrectly placed
+
+### 5. Execution Guard Timeout
+**Design**: 100ms timeout prevents duplicate executions during rapid DOM changes  
+**Edge Case**: Very slow actions (>100ms) combined with rapid navigation may overlap  
+**Justification**: Balances duplicate prevention with responsiveness
+
+### 6. Modal Navigation
+**Behavior**: Navigation within modals may or may not trigger detection depending on modal DOM structure  
+**Rationale**: Modals often represent contextual overlays rather than distinct page navigations  
+**By Design**: Intentional to avoid treating modal interactions as page views
+
+### 7. Single Placeholder Assumption
+**Assumption**: Each layout contains one `.mx-placeholder` element  
+**Validity**: True for all standard Mendix layouts and Atlas templates  
+**Impact**: None for conventional Mendix applications
+
+## Best Practices
+
+- ✅ Place widget in layouts only (e.g., `Atlas_Default`)
+- ✅ Use single widget instance per application
+- ✅ Avoid conditional visibility on page's first widget
+- ✅ Test in cloud environment before production deployment
+- ✅ Monitor console logs during development
+
 ## Issues, Suggestions and Feature Requests
 
 Please open an issue on GitHub for any bugs, feature requests, or suggestions.
